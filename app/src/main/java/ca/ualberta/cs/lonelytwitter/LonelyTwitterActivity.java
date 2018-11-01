@@ -11,13 +11,17 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import ca.ualberta.cs.lonelytweet.ImportantLonelyTweet;
+import ca.ualberta.cs.lonelytweet.LonelyTweet;
+import ca.ualberta.cs.lonelytweet.NormalLonelyTweet;
+
 public class LonelyTwitterActivity extends Activity {
 
 	private EditText bodyText;
 	private ListView oldTweetsList;
 
-	private List<NormalLonelyTweet> tweets;
-	private ArrayAdapter<NormalLonelyTweet> adapter;
+	private List<LonelyTweet> tweets;
+	private ArrayAdapter<LonelyTweet> adapter;
 	private TweetsFileManager tweetsProvider;
 
 	@Override
@@ -35,29 +39,47 @@ public class LonelyTwitterActivity extends Activity {
 
 		tweetsProvider = new TweetsFileManager(this);
 		tweets = tweetsProvider.loadTweets();
-		adapter = new ArrayAdapter<NormalLonelyTweet>(this, R.layout.list_item,
+		adapter = new ArrayAdapter<LonelyTweet>(this, R.layout.list_item,
 				tweets);
 		oldTweetsList.setAdapter(adapter);
+	}
+
+	public List<LonelyTweet> getTweets() {
+		return tweets;
 	}
 
 	public void save(View v) {
 		String text = bodyText.getText().toString();
 
-		NormalLonelyTweet tweet;
-
-		tweet = new NormalLonelyTweet(text, new Date());
+		LonelyTweet tweet;
 
 		//TODO: use different sub-classes (Normal or Important) based on usage of "*" in the text.
+
+		tweet = getNormalOrImportantLonelyTweet(text);
+
+
 		
 		if (tweet.isValid()) {
 			tweets.add(tweet);
 			adapter.notifyDataSetChanged();
+
 
 			bodyText.setText("");
 			tweetsProvider.saveTweets(tweets);
 		} else {
 			Toast.makeText(this, "Invalid tweet", Toast.LENGTH_SHORT).show();
 		}
+	}
+
+	private LonelyTweet getNormalOrImportantLonelyTweet(String text) {
+		LonelyTweet tweet;
+		if(text.contains("*")){
+			tweet = new ImportantLonelyTweet(text,new Date());
+		}
+		else{
+			tweet = new NormalLonelyTweet(text, new Date());
+		}
+		return tweet;
 	}
 
 	public void clear(View v) {
